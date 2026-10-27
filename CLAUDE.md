@@ -103,7 +103,7 @@ limite. Tem ícone na barra superior do GNOME e menu próprio no clique.
 - `instalar.sh` - atalho em `~/.local/share/applications/` + autostart em
   `~/.config/autostart/` (`--sem-autostart`, `--remover`).
 - `verifica.sh` - checagem rápida sem GUI.
-- `LEIA-ME.md` - guia de uso.
+- `README.md` - guia de uso e de instalação num PC novo.
 - Fora daqui: `~/.config/monitor-flutuante/config.json` (estado), log de teste em
   `tmp/monitor-flutuante.log` (ignorado pelo git).
 
