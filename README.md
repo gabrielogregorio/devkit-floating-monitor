@@ -179,7 +179,8 @@ Issues use forms (`bug_report.yml`, `feature_request.yml`); PRs start from `pull
 | Turn on/off | top bar icon menu → "On" |
 | Menu from the bar | right click on the icon (legacy tray) or click (AppIndicator) |
 
-Menu options: always on top, transparent (white text), lock position, pause reading, back to the
+Menu: a first line with the name, what it is and the state ("Floating Monitor (CPU, RAM and GPU):
+on"), then On, always on top, transparent (white text), lock position, pause reading, back to the
 screen corner, open System Monitor. "On" turns the line on and off (off = hidden and not reading).
 
 ## Architecture

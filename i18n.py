@@ -7,8 +7,9 @@ import os
 
 PT_BR = {
     "Floating Monitor": "Monitor flutuante",
-    "Floating Monitor: on": "Monitor flutuante: ligado",
-    "Floating Monitor: off": "Monitor flutuante: desligado",
+    "CPU, RAM and GPU": "CPU, RAM e GPU",
+    "{app}: on": "{app}: ligado",
+    "{app}: off": "{app}: desligado",
     "On": "Ligado",
     "Always on top": "Sempre acima de tudo",
     "Transparent (white text)": "Transparente (texto branco)",

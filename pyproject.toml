@@ -1,6 +1,6 @@
 [project]
 name = "devkit-floating-monitor"
-version = "1.0.0"
+version = "1.1.0"
 description = "CPU, RAM and GPU on a transparent line above everything, with a GNOME top bar icon: GTK 3 from the system, /proc, /sys and NVML, no extra packages"
 requires-python = "==3.12.*"
 dependencies = []

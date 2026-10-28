@@ -50,3 +50,12 @@ def test_gpu_with_unknown_values():
 def test_limits_come_from_the_config():
     cfg = dict(CFG, usage_limit=50)
     assert blocks(fm.build_line(cfg, 55.0, None, RAM_OK))[0].startswith(RED)
+
+
+def test_menu_status_line_says_what_it_is(monkeypatch):
+    import i18n
+    monkeypatch.setattr(i18n, "LANG", "en")
+    assert fm.status_text(True) == "Floating Monitor (CPU, RAM and GPU): on"
+    assert fm.status_text(False) == "Floating Monitor (CPU, RAM and GPU): off"
+    monkeypatch.setattr(i18n, "LANG", "pt-BR")
+    assert fm.status_text(False) == "Monitor flutuante (CPU, RAM e GPU): desligado"

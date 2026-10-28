@@ -295,6 +295,15 @@ def build_line(cfg, cpu, cpu_temp, ram, gpu=None):
     return " │ ".join(parts)
 
 
+def title():
+    """Name plus what it is, so the menu says more than the icon."""
+    return tr("Floating Monitor") + " (" + tr("CPU, RAM and GPU") + ")"
+
+
+def status_text(on):
+    return tr("{app}: on", app=title()) if on else tr("{app}: off", app=title())
+
+
 # --------------------------------------------------------------------- app
 
 class Monitor(Gtk.Application):
@@ -512,6 +521,10 @@ class Monitor(Gtk.Application):
             i.connect("toggled", cb)
             m.append(i)
 
+        # first line: name + what it is + state, like every other app icon on the bar
+        status = Gtk.MenuItem(label=self._status_text())
+        status.set_sensitive(False)
+        m.append(status)
         check(tr("On"), self.is_on(), lambda w: self.turn_on(w.get_active()))
         m.append(Gtk.SeparatorMenuItem())
         check(tr("Always on top"), self.cfg["always_on_top"], lambda *_: self.toggle("always_on_top"))
@@ -524,6 +537,9 @@ class Monitor(Gtk.Application):
         # no "Quit" on purpose: the icon always stays on the bar; unchecking "On" turns it off
         m.show_all()
         return m
+
+    def _status_text(self):
+        return status_text(self.is_on())
 
     def _reset_position(self, *_):
         self.cfg["x"] = self.cfg["y"] = None
@@ -558,8 +574,7 @@ class Monitor(Gtk.Application):
         if self.icon:
             self.icon.set_from_file(os.path.join(ICONS_DIR, f"{ICON_NAME}-{state}.svg"))
         if self.ind:
-            label = tr("Floating Monitor: on") if state == "on" else tr("Floating Monitor: off")
-            self.ind.set_icon_full(f"{ICON_NAME}-{state}", label)
+            self.ind.set_icon_full(f"{ICON_NAME}-{state}", self._status_text())
             self._tray_menu = self._menu()
             self.ind.set_menu(self._tray_menu)
 
