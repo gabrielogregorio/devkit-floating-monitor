@@ -18,6 +18,10 @@
 [![Lint](https://github.com/gabrielogregorio/devkit-floating-monitor/actions/workflows/check-quality.yml/badge.svg)](https://github.com/gabrielogregorio/devkit-floating-monitor/actions/workflows/check-quality.yml)
 [![CodeQL](https://github.com/gabrielogregorio/devkit-floating-monitor/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/gabrielogregorio/devkit-floating-monitor/actions/workflows/codeql-analysis.yml)
 
+<br>
+
+<img src="docs/floating-line.png" alt="The floating line under the GNOME top bar, on a dark background: drag grip, CPU 68% 68°, RAM 11.2/23.3G 48%, GPU 12% 43° 1.3G, with the bars icon among the top bar icons" width="733">
+
 </div>
 
 ## About
@@ -199,6 +203,7 @@ verify.sh             reads the sensors once without a window
 run-tests.sh          lint + pytest + verify.sh, same as the CI
 tests/                pytest with fake /proc and /sys trees
 .github/              workflows, composite action, issue forms, PR template
+docs/                 README screenshot
 ```
 
 Adding text: write it in English inside `tr("…")` and add the pt-BR line to `PT_BR` in `i18n.py`.
