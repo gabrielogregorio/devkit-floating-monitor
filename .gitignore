@@ -1,4 +1,15 @@
+# python
+.venv/
 __pycache__/
 *.pyc
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# local scratch
 tmp/
 lixo/
+trash/
+dist/
+*.log
