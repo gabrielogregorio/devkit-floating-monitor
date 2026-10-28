@@ -1,115 +1,125 @@
-# CLAUDE.md - Monitor flutuante
+# CLAUDE.md - Floating Monitor
 
-Regras e contexto para qualquer agente que mexer neste projeto. Leia inteiro antes de
-editar. Este diretório é autossuficiente: não depende de nenhum repo ou documento externo.
+Rules and context for any agent that touches this project. Read it all before editing. This
+folder is self-contained: it depends on no external repo or document.
 
-## O que é
+## What it is
 
-Uma linha flutuante no desktop com CPU (% e temperatura), RAM (usada/total e %) e GPU
-(%, temperatura e VRAM), atualizada a cada 2 s. Fica vermelha por bloco quando passa do
-limite. Tem ícone na barra superior do GNOME e menu próprio no clique.
+A floating line on the desktop with CPU (% and temperature), RAM (used/total and %) and GPU (%,
+temperature and VRAM), refreshed every 2 s. Each block turns red over its limit. It has an icon on
+the GNOME top bar and its own menu on click.
 
-## Ambiente alvo
+## Target environment
 
-- Ubuntu 24.04, GNOME, **sessão X11** (`$XDG_SESSION_TYPE = x11`).
-- Python 3 do sistema (`/usr/bin/python3`) + PyGObject + GTK3. **Nenhum pip, nenhuma venv.**
-- GPU NVIDIA pelo driver proprietário (`libnvidia-ml.so.1`).
-- Extensão `ubuntu-appindicators@ubuntu.com` ativa, com `legacy-tray-enabled = true`.
-- **Não instalados**: `python3-gi-cairo`, `xdotool`, `wmctrl`.
-  `gir1.2-ayatanaappindicator3-0.1` foi instalado em 2026-10-27 (indicador nativo).
+- Ubuntu 24.04, GNOME, **X11 session** (`$XDG_SESSION_TYPE = x11`).
+- System Python 3 (`/usr/bin/python3`) + PyGObject + GTK3. **No pip, no venv to run it** (the
+  `.venv` is only for the dev tools: pytest, ruff).
+- NVIDIA GPU through the proprietary driver (`libnvidia-ml.so.1`).
+- `ubuntu-appindicators@ubuntu.com` extension on (it shows both the AppIndicator and the legacy
+  tray icon).
+- Not required: `python3-gi-cairo`, `xdotool`, `wmctrl`. `gir1.2-ayatanaappindicator3-0.1` is
+  optional (native indicator; without it the legacy `Gtk.StatusIcon` is used).
 
-## Regras do projeto
+## Project rules
 
-1. **Zero dependência nova.** Só biblioteca padrão + `gi` (Gtk/Gdk/GLib 3.0). Se uma
-   mudança exigir pacote, escreva o `sudo apt install ...` e entregue pro usuário rodar; o
-   código tem que continuar funcionando sem ele (fallback).
-2. **Sem cairo.** O sinal `draw` com cairo quebra sem `python3-gi-cairo`. Visual é feito com
-   `Gtk.Label` + CSS (classes ligadas/desligadas). Não reintroduza `draw`.
-3. **Fixe as versões do gi** antes de importar (`Gtk 3.0` **e** `Gdk 3.0`). Sem o `Gdk`, o
-   PyGObject carrega Gdk 4.0 e o app morre na importação.
-4. **Leve de verdade.** Nada de subprocesso no tick (nada de `nvidia-smi`, `sensors`, `ps`).
-   Ler `/proc` e `/sys` direto, GPU por NVML via `ctypes`. Redesenhar só se o texto mudou.
-   Referência medida: ~71 MB RSS, CPU ~0.
-5. **Uma linha só.** Novo dado entra como bloco `│ ...` na mesma linha, com regra de alerta.
-6. **Não quebre o que o usuário configurou:** `~/.config/monitor-flutuante/config.json` guarda
-   posição e modos. Chave nova entra em `PADRAO` (merge), nunca reescreva o arquivo do zero.
-7. Nada de `rm` em arquivo do usuário: lixo vai para `./lixo/` (ignorado pelo git).
+1. **No new dependency.** Only the standard library + `gi` (Gtk/Gdk/GLib 3.0). If a change needs a
+   package, write the `sudo apt install ...` for the user to run; the code must keep working
+   without it (fallback).
+2. **No cairo.** The `draw` signal with cairo breaks without `python3-gi-cairo`. The look is done
+   with `Gtk.Label` + CSS (classes on/off). Do not bring `draw` back.
+3. **Pin the gi versions** before importing (`Gtk 3.0` **and** `Gdk 3.0`). Without `Gdk`, PyGObject
+   loads Gdk 4.0 and the app dies on import.
+4. **Truly light.** No subprocess in the tick (no `nvidia-smi`, `sensors`, `ps`). Read `/proc` and
+   `/sys` directly, GPU through NVML via `ctypes`. Redraw only when the text changed. Measured
+   reference: ~71 MB RSS, CPU ~0.
+5. **One line only.** New data comes as a `│ ...` block on the same line, with an alert rule, in
+   `build_line()` (pure, tested).
+6. **Do not break what the user set:** `~/.config/devkit-floating-monitor/config.json` stores
+   position and modes. A new key goes into `DEFAULTS` (merge), never rewrite the file from scratch.
+   Unknown keys are dropped on load. The pre-rename file (`~/.config/monitor-flutuante/`) is read
+   once through `LEGACY_KEYS` when the new one does not exist; do not remove that path.
+7. No `rm` on user files: trash goes to `./lixo/` or `./trash/` (ignored by git).
+8. Code, comments, docs and commits in **English**; menu and titles through `tr()` with the pt-BR
+   line in `PT_BR` (`i18n.py`). Commits: one line, imperative.
 
-## Ligado/desligado (2026-10-27)
+## On/off
 
-- **Sem item "Sair"**: o ícone fica sempre na barra. Desligar = desmarcar "Ligado"
-  (linha oculta + timer parado). Ícone colorido ligado, cinza desligado
-  (SVG gerado em `~/.cache/monitor-flutuante/icones/`).
-- Autostart roda com `--desligado` (sobe só o ícone). Abrir pelo atalho = ligar.
-  `--desligado` é tirado do argv antes do `run()`: GApplication recusa opção desconhecida.
+- **No "Quit" item**: the icon always stays on the bar. Turning off = unchecking "On" (line hidden +
+  timer stopped). Colored icon when on, gray when off (SVG written to
+  `~/.cache/devkit-floating-monitor/icons/`).
+- The autostart runs with `--off` (only the icon comes up). Opening from the shortcut = turning on.
+  `--off` is removed from argv before `run()`: GApplication refuses an unknown option.
 
-## Arquitetura (`monitor_flutuante.py`, arquivo único)
+## Architecture (`floating_monitor.py`, single file)
 
-| Parte | O que faz |
+| Part | What it does |
 |---|---|
-| `PADRAO`, `carregar_config`, `salvar_config` | config JSON com merge sobre os padrões; grava em `.tmp` + `os.replace` |
-| `Cpu` | % por delta de `/proc/stat` (ocioso = idle + iowait); temp em hwmon (`k10temp`/`zenpower`/`coretemp`, label `Tctl`/`Tdie`/`Package id 0`), caminho resolvido uma vez |
-| `ler_ram` | `/proc/meminfo`: usado = `MemTotal - MemAvailable` |
-| `Gpu` | NVML por `ctypes` (`nvmlInit_v2`, `GetHandleByIndex_v2`, `GetUtilizationRates`, `GetTemperature`, `GetMemoryInfo`); fallback AMD/Intel em `/sys/class/drm/card*/device/gpu_busy_percent` (não testado); sem GPU o bloco some |
-| `Monitor(Gtk.Application)` | instância única por `APP_ID`; 2ª execução só mostra a janela; `hold()` mantém vivo oculto |
-| `_criar_janela` | janela sem borda, RGBA, UTILITY, `stick()`, `set_keep_above`, sem foco; `EventBox` → `Box.caixa` → label `⠿` + label do texto |
-| `CSS` | fundo por classe (`solido`, `hover`, `travado`, `pausado`), texto branco com `text-shadow` de 4 lados, fonte monoespaçada |
-| `_clique` | botão 1 sobre o `⠿` → `begin_move_drag`; qualquer outro clique → `Gtk.Menu.popup_at_pointer` |
-| `_movido` / `_salvar_posicao` | salva posição com debounce de 800 ms |
-| `atualizar` | tick de `INTERVALO_S`; monta markup Pango com `<span foreground=VERMELHO>` no bloco em alerta |
-| `_menu` | o mesmo menu serve a janela e a barra superior (é recriado a cada abertura) |
-| `_criar_bandeja` | `AyatanaAppIndicator3` se o typelib existir; senão `Gtk.StatusIcon` (esquerdo mostra/oculta, direito menu) |
-| `abrir_monitor` | `gnome-system-monitor`, com fallbacks |
+| `DEFAULTS`, `LEGACY_KEYS`, `load_config`, `save_config` | JSON config merged over the defaults, legacy migration; writes to `.tmp` + `os.replace` |
+| `Cpu` | % from the `/proc/stat` delta (idle = idle + iowait); temp from hwmon (`k10temp`/`zenpower`/`coretemp`/`cpu_thermal`, label `Tctl`/`Tdie`/`Package id 0`, else `temp1`), path resolved once |
+| `read_ram` | `/proc/meminfo`: used = `MemTotal - MemAvailable` |
+| `Gpu` | NVML through `ctypes` (`nvmlInit_v2`, `GetHandleByIndex_v2`, `GetUtilizationRates`, `GetTemperature`, `GetMemoryInfo`); AMD/Intel fallback in `/sys/class/drm/card*/device/gpu_busy_percent` (untested on hardware); without a GPU the block is hidden |
+| `build_line` | Pango markup of the line, `<span foreground=RED>` on a block over its limit |
+| `STAT_PATH`, `MEMINFO_PATH`, `HWMON_DIR`, `DRM_DIR` | the paths the sensors read; the tests point them into `tmp_path` |
+| `Monitor(Gtk.Application)` | single instance by `APP_ID`; a 2nd run only turns it on; `hold()` keeps it alive while hidden |
+| `_make_window` | undecorated window, RGBA, UTILITY, `stick()`, `set_keep_above`, no focus; `EventBox` → `Box.box` → `⠿` label + text label |
+| `CSS` | background by class (`solid`, `hover`, `locked`, `paused`), white text with a 4-side `text-shadow`, monospace font |
+| `_click` | button 1 on the `⠿` → `begin_move_drag`; any other click → `Gtk.Menu.popup_at_pointer` |
+| `_moved` / `_save_position` | saves the position with an 800 ms debounce |
+| `refresh` | `INTERVAL_S` tick; calls `build_line` |
+| `_menu` | the same menu serves the window and the top bar (rebuilt on every open) |
+| `_make_tray` | `AyatanaAppIndicator3` if the typelib exists; else `Gtk.StatusIcon` (left toggles, right menu) |
+| `open_system_monitor` | `gnome-system-monitor`, with fallbacks |
 
-## Armadilhas já pagas (não repetir)
+## Traps already paid for (do not repeat)
 
-- `Requiring namespace 'Gdk' version '3.0', but '4.0' is already loaded` → faltou
+- `Requiring namespace 'Gdk' version '3.0', but '4.0' is already loaded` → missing
   `gi.require_version("Gdk", "3.0")`.
-- `Couldn't find foreign struct converter for 'cairo.Context'` → falta `python3-gi-cairo`;
-  por isso não há cairo aqui.
-- `Namespace AyatanaAppIndicator3 not available` → a `.so` existe, o typelib não; o fallback
-  `StatusIcon` cobre.
-- `pgrep -f "python3 monitor_flutuante.py"` acha o próprio shell do agente. O autostart roda
-  como `/usr/bin/python3 <pasta>/monitor_flutuante.py --desligado`: use
-  `pgrep -af monitor_flutuante | grep -v pgrep` e mate **pelo PID**, nunca com `pkill -f`.
-- `set_keep_above` não funciona em Wayland (o compositor veta). Se a sessão virar Wayland,
-  rodar com `GDK_BACKEND=x11` (XWayland). Não testado.
-- GTK4 não serve: tirou `set_keep_above` e `StatusIcon`. Fique no GTK3.
+- `Couldn't find foreign struct converter for 'cairo.Context'` → missing `python3-gi-cairo`; that
+  is why there is no cairo here.
+- `Namespace AyatanaAppIndicator3 not available` → the `.so` exists, the typelib does not; the
+  `StatusIcon` fallback covers it.
+- `pgrep -f "python3 floating_monitor.py"` finds the agent's own shell. The autostart runs as
+  `/usr/bin/python3 <folder>/floating_monitor.py --off`: use `pgrep -af floating_monitor | grep -v
+  pgrep` and kill **by PID**, never with `pkill -f`.
+- `set_keep_above` does not work on Wayland (the compositor vetoes it). If the session becomes
+  Wayland, run with `GDK_BACKEND=x11` (XWayland). Untested.
+- GTK4 does not work: it dropped `set_keep_above` and `StatusIcon`. Stay on GTK3.
 
-## Como testar depois de mexer
+## How to test after a change
 
-1. `./verifica.sh` - compila, lê os sensores uma vez sem abrir janela, mostra a linha que
-   seria exibida. Tem que sair `OK`.
-2. Reiniciar a instância que está rodando (a nova não sobe se a antiga existir, por causa da
-   instância única):
+1. `./run-tests.sh` - ruff, ShellCheck, pytest (fake `/proc`/`/sys`, config in `tmp_path`,
+   `install.sh` in a fake `HOME`) and `./verify.sh` (compiles, reads the real sensors once without
+   a window, prints the line). It must end in `ALL GREEN`.
+2. Restart the running instance (the new one does not start while the old one exists, because of
+   the single instance):
    ```bash
-   PID=$(pgrep -f monitor_flutuante.py | head -1); [ -n "$PID" ] && kill "$PID"
-   mkdir -p tmp && setsid /usr/bin/python3 "$PWD/monitor_flutuante.py" \
-     > tmp/monitor-flutuante.log 2>&1 &
+   PID=$(pgrep -f floating_monitor.py | head -1); [ -n "$PID" ] && kill "$PID"
+   mkdir -p tmp && setsid /usr/bin/python3 "$PWD/floating_monitor.py" \
+     > tmp/floating-monitor.log 2>&1 &
    ```
-   Rode isso como script próprio, não colado num `bash -c` que contenha o nome do arquivo no
-   padrão do `pgrep`.
-3. Print do canto da tela sem ferramenta extra:
+   Run it as its own script file, not pasted into a `bash -c` that contains the file name in the
+   `pgrep` pattern.
+3. Screenshot of the screen corner with no extra tool:
    ```bash
    python3 -c "import gi; gi.require_version('Gdk','3.0'); from gi.repository import Gdk
    r=Gdk.get_default_root_window(); w=r.get_width()
    Gdk.pixbuf_get_from_window(r,w-700,0,700,80).savev('tmp/monitor-print.png','png',[],[])"
    ```
-4. Arrastar e menu não dão para testar por script (sem `xdotool`). Peça ao usuário.
+4. Dragging and the menu cannot be tested by script (no `xdotool`). Ask the user.
 
-## Arquivos
+## Files
 
-- `monitor_flutuante.py` - o app.
-- `instalar.sh` - atalho em `~/.local/share/applications/` + autostart em
-  `~/.config/autostart/` (`--sem-autostart`, `--remover`).
-- `verifica.sh` - checagem rápida sem GUI.
-- `README.md` - guia de uso e de instalação num PC novo.
-- Fora daqui: `~/.config/monitor-flutuante/config.json` (estado), log de teste em
-  `tmp/monitor-flutuante.log` (ignorado pelo git).
+- `floating_monitor.py` - the app. `i18n.py` - menu/title strings.
+- `install.sh` - shortcut in `~/.local/share/applications/` + autostart in `~/.config/autostart/`
+  (`--no-autostart`, `--remove`).
+- `verify.sh` - quick check without GUI. `run-tests.sh` - every layer, same as the CI.
+- `tests/` - pytest. `pyproject.toml` / `uv.lock` / `requirements-dev.txt` - dev tools.
+- `README.md` - usage and new PC setup.
+- Outside: `~/.config/devkit-floating-monitor/config.json` (state), test log in
+  `tmp/floating-monitor.log` (ignored by git).
 
-## Ideias não feitas (só se o usuário pedir)
+## Ideas not done (only if the user asks)
 
-- Limites editáveis pelo menu (hoje só no JSON).
-- Click-through (input shape vazio no X11) para o texto não bloquear clique.
-- Rede (KB/s) e disco como blocos extras.
-- Ícone nativo: `sudo apt install gir1.2-ayatanaappindicator3-0.1` (o código já detecta).
+- Limits editable from the menu (today only in the JSON).
+- Click-through (empty input shape on X11) so the text does not block clicks.
+- Network (KB/s) and disk as extra blocks.
