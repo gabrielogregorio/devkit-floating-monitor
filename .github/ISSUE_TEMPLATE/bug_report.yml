@@ -1,0 +1,49 @@
+name: Bug report
+description: The line does not show, does not stay on top, a value is wrong or the top bar icon is missing
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: Include what the line shows (or a screenshot) and any error in the terminal.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. `./floating_monitor.py`
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `cat VERSION`
+      placeholder: 1.0.0
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: PC
+      description: Distro and version, session type (`echo $XDG_SESSION_TYPE`), CPU and GPU vendor
+      placeholder: Ubuntu 24.04, x11, AMD CPU, NVIDIA GPU
+    validations:
+      required: true
+  - type: textarea
+    id: verify
+    attributes:
+      label: Output of ./verify.sh
+      render: text
+    validations:
+      required: true
