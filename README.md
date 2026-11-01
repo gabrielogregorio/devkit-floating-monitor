@@ -124,7 +124,7 @@ GitHub Actions, in `.github/`:
 | Workflow | When | What |
 |---|---|---|
 | `tests.yml` | push/PR to `main`, manual | lint, unit and the smoke run on Ubuntu 24.04 with PyGObject from apt |
-| `check-quality.yml` | push/PR to `main` | ruff, ShellCheck, `.sh` files executable in git, actions pinned to a hash, workflow YAML |
+| `check-quality.yml` | push/PR to `main` | ruff, ShellCheck, `.sh` files executable in git, actions pinned to a hash, workflow YAML; on PRs only, dependency audit with pip-audit |
 | `codeql-analysis.yml` | push/PR, weekly | CodeQL for Python and the workflows |
 | `auto-complete-fields.yml` | PR opened/updated | assigns the author, labels by commit words and touched files, lists the commits in the PR body (`[...autoGenerate]`), titles it `Release vX.Y.Z - …`, fails if that version was already released |
 | `create-tag-and-release.yml` | PR merged into `main` | creates the tag `vX.Y.Z` from `VERSION` and a GitHub release with the PR text, generated notes, the source tarball and `SHA256SUMS` (a `-rc.1` style version becomes a pre-release) |
