@@ -43,3 +43,14 @@ jobs:
 
       - name: Workflow files are valid YAML
         run: python3 -c "import sys, yaml; [yaml.safe_load(open(f)) for f in sys.argv[1:]]" .github/workflows/*.yml .github/ISSUE_TEMPLATE/*.yml .github/actions/*/action.yml .github/dependabot.yml
+
+  audit:
+    name: Audit dependencies (pip-audit)
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 5
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Python packages (versions from requirements-dev.txt)
+        run: pipx run pip-audit==2.10.1 --no-deps --disable-pip -r requirements-dev.txt
