@@ -8,7 +8,7 @@
 
 ## Checklist
 
-- [ ] `VERSION` bumped (merging into `main` creates the tag `vX.Y.Z` and the release)
+- [ ] On a `release/x.x.x` branch, `VERSION` bumped (merging into `main` creates the tag `vX.Y.Z` and the release)
 - [ ] `./run-tests.sh` ends with `ALL GREEN`
 - [ ] New menu or tray text is English inside `tr()` with its line in `PT_BR` in `i18n.py`
 - [ ] Still no new dependency: standard library + `gi` (Gtk/Gdk/GLib 3.0), no cairo, no subprocess in the tick
